@@ -49,10 +49,8 @@ impl LeitnerSystem {
         Ok(())
     }
 
-    pub fn remove_card(&mut self) -> Result<(), String> {
-        let name = ask_string("card name", "")?;
-    
-        self.cards.retain(|c| !c.name.eq(&name));
+    pub fn remove_card(&mut self, name: &String) -> Result<(), String> {
+        self.cards.retain(|c| !c.name.eq(name));
     
         print!("> Card(s) [{}] removed successfully\n", name);
         Ok(())
@@ -66,10 +64,11 @@ impl LeitnerSystem {
         }
     
         let mut n = 0;
+        let base: u64 = 2;
         for b in boxes {
             n += 1;
             print!("+-------------------------------+\n");
-            print!("| Box {:3}: all {} days\n", n, n);
+            print!("| Box {:3}: all {} days\n", n, base.pow(n as u32 - 1));
             for c in b {
                 print!(
                     "| [{}]\n|  >question: {}\n|  >answer: {}\n",

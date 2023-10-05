@@ -22,7 +22,7 @@ enum Commands {
     /// add a card to the system
     Add {},
     /// remove a card
-    Remove {},
+    Remove { card_name: String },
     /// list all cards
     List {},
     /// draw all cards of the day
@@ -35,34 +35,35 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
     
-    
     // You can check the value provided by positional arguments, or option arguments
     let filename = match cli.filename.as_deref() {
         Some(name) => name,
         None => "default.ltsys",  
     };
     
-    println!("Value for name: {filename}");
-    let mut ltsys = open_ltsys(&filename.to_string()).unwrap();
-
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     let _ = match &cli.command {
-        Some(Commands::Add {  }) => {
-            let _ = ltsys.add_card();
-            write_to_disk(&ltsys, &filename.to_string())
-        }
         Some(Commands::Create {  }) => {
             create_system()
         }
-        Some(Commands::Remove {  }) => {
-            let _ = ltsys.remove_card();
+        Some(Commands::Add {  }) => {
+            let mut ltsys = open_ltsys(&filename.to_string()).unwrap();   
+            let _ = ltsys.add_card();
+            write_to_disk(&ltsys, &filename.to_string())
+        }
+        Some(Commands::Remove { card_name }) => {
+            let mut ltsys = open_ltsys(&filename.to_string()).unwrap();
+            let _ = ltsys.remove_card(card_name);
             write_to_disk(&ltsys, &filename.to_string())
         }
         Some(Commands::List {  }) => {
-            ltsys.list_cards()
+            open_ltsys(&filename.to_string())
+            .unwrap()
+            .list_cards()
         }
         Some(Commands::Draw {  }) => {
+            let mut ltsys = open_ltsys(&filename.to_string()).unwrap();
             let _ = ltsys.draw_cards();
             write_to_disk(&ltsys, &filename.to_string())
         }
