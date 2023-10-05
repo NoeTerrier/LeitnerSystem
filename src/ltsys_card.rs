@@ -10,7 +10,7 @@ pub struct Card {
     pub question: String,
     pub answer: String,
     pub answered_date: SystemTime, // last time it was correctly answered 
-    pub box_number: u64, // answer this question when the day is more than answered_date + delay
+    pub box_number: u64, // answer this question when the day is more than answered_date + 2**box_number
 }
 
 impl Card {

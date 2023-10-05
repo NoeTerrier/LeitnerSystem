@@ -28,7 +28,13 @@ enum Commands {
     /// draw all cards of the day
     Draw {},
     /// create a new Leitner system
-    Create {},
+    Create { 
+        #[arg(default_value="default.ltsys")]
+        filename: String,
+
+        #[arg(default_value="7")]
+        boxes_number: u64
+    },
 }
 
 
@@ -44,8 +50,8 @@ fn main() {
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level cmd
     let _ = match &cli.command {
-        Some(Commands::Create {  }) => {
-            create_system()
+        Some(Commands::Create { filename , boxes_number}) => {
+            create_system(filename, *boxes_number)
         }
         Some(Commands::Add {  }) => {
             let mut ltsys = open_ltsys(&filename.to_string()).unwrap();   

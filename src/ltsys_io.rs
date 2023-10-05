@@ -4,21 +4,11 @@ use std::vec;
 
 use crate::ltsys::LeitnerSystem;
 
-pub fn create_system() -> Result<(), String> {
-    // ask file name
-    let filename: String = ask_string("filename", "default.ltsys")?;
-
-    // ask number of boxes
-    let mut boxes_number = String::new();
-    print!("Number of boxes (let empty for default 7) :\n");
-    io::stdin()
-        .read_line(&mut boxes_number)
-        .or(Err("error when reading number of boxes".to_string()))?;
-
+pub fn create_system(filename: &String, boxes_number: u64) -> Result<(), String> {
     // create new system
     let new_system = LeitnerSystem {
         cards: vec![],
-        boxes_number: boxes_number.trim().parse().unwrap_or(7),
+        boxes_number,
     };
 
     write_to_disk(&new_system, &filename)
