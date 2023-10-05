@@ -1,20 +1,12 @@
 use std::fs;
 use std::io;
-use std::time::SystemTime;
 use std::vec;
 
-use crate::Box;
-use crate::LeitnerSystem;
+use crate::ltsys::LeitnerSystem;
 
 pub fn create_system() -> Result<(), String> {
     // ask file name
     let filename: String = ask_string("filename", "default.ltsys")?;
-
-    // create new system
-    let mut new_system = LeitnerSystem {
-        start_time: SystemTime::now(),
-        boxes: vec![],
-    };
 
     // ask number of boxes
     let mut boxes_number = String::new();
@@ -23,15 +15,11 @@ pub fn create_system() -> Result<(), String> {
         .read_line(&mut boxes_number)
         .or(Err("error when reading number of boxes".to_string()))?;
 
-    let boxes_number: u32 = boxes_number.trim().parse().unwrap_or(7);
-
-    for i in 0..boxes_number {
-        new_system.boxes.push(Box {
-            name: i.to_string(),
-            frequence: (2_u64).pow(i),
-            cards: vec![],
-        });
-    }
+    // create new system
+    let new_system = LeitnerSystem {
+        cards: vec![],
+        boxes_number: boxes_number.trim().parse().unwrap_or(7),
+    };
 
     write_to_disk(&new_system, &filename)
 }

@@ -1,73 +1,71 @@
 mod ltsys_card;
 mod ltsys_io;
+mod ltsys;
 
-use ltsys_card::{add_card, draw_cards, list_cards, remove_card};
-use ltsys_io::create_system;
-use serde::{Deserialize, Serialize};
-use std::env;
-use std::time::SystemTime;
+use ltsys_io::open_ltsys;
+use clap::{Parser, Subcommand};
 
-type Action = fn() -> Result<(), String>;
+use crate::ltsys_io::{create_system, write_to_disk};
 
-static COMMANDS: &'static [(&'static str, Action, &'static str)] = &[
-    ("help", print_help, "displays this message"),
-    ("add", add_card, "add a card to the system"),
-    ("remove", remove_card, "remove a card"),
-    ("list", list_cards, "list all cards"),
-    ("draw", draw_cards, "draw all cards of the day"),
-    ("create", create_system, "create a new Leitner system"),
-];
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    /// Optional filename to operate on
+    filename: Option<String>,
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct LeitnerSystem {
-    start_time: SystemTime,
-    boxes: Vec<Box>,
+    #[command(subcommand)]
+    command: Option<Commands>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Card {
-    name: String,
-    question: String,
-    answer: String,
+#[derive(Subcommand)]
+enum Commands {
+    /// add a card to the system
+    Add {},
+    /// remove a card
+    Remove {},
+    /// list all cards
+    List {},
+    /// draw all cards of the day
+    Draw {},
+    /// create a new Leitner system
+    Create {},
 }
 
-#[derive(Serialize, Deserialize, Clone)]
-pub struct Box {
-    name: String,
-    frequence: u64,
-    cards: Vec<Card>,
-}
 
 fn main() {
-    let arg = env::args().skip(1).next();
+    let cli = Cli::parse();
+    
+    
+    // You can check the value provided by positional arguments, or option arguments
+    let filename = match cli.filename.as_deref() {
+        Some(name) => name,
+        None => "default.ltsys",  
+    };
+    
+    println!("Value for name: {filename}");
+    let mut ltsys = open_ltsys(&filename.to_string()).unwrap();
 
-    match arg {
-        Some(cmd) => {
-            for (name, fun, _) in COMMANDS {
-                if cmd.eq(name) {
-                    match fun() {
-                        Ok(()) => (),
-                        Err(e) => print!("> /!\\ {}\n", e),
-                    }
-                    return;
-                }
-            }
-            print!("> /!\\ Command doesn't exist\n");
-            let _ = print_help();
-            return;
+    // You can check for the existence of subcommands, and if found use their
+    // matches just as you would the top level cmd
+    let _ = match &cli.command {
+        Some(Commands::Add {  }) => {
+            let _ = ltsys.add_card();
+            write_to_disk(&ltsys, &filename.to_string())
         }
-        None => {
-            let _ = print_help();
-            return;
+        Some(Commands::Create {  }) => {
+            create_system()
         }
-    }
-}
-
-fn print_help() -> Result<(), String> {
-    print!("=== HELP ===\nAvailable commands:\n");
-    for (name, _, description) in COMMANDS {
-        print!("  {:10}: {}\n", name, description);
-    }
-    print!("============\n");
-    Ok(())
+        Some(Commands::Remove {  }) => {
+            let _ = ltsys.remove_card();
+            write_to_disk(&ltsys, &filename.to_string())
+        }
+        Some(Commands::List {  }) => {
+            ltsys.list_cards()
+        }
+        Some(Commands::Draw {  }) => {
+            let _ = ltsys.draw_cards();
+            write_to_disk(&ltsys, &filename.to_string())
+        }
+        None => Ok(())
+    };
 }
